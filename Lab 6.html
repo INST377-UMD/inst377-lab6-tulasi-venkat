@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<head>
+    <title>Map of US</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        #map { height: 500px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<h1>Map of US</h1>
+<div id="map"></div>
+
+<div id="coordinates-info">
+    <p>Marker 1: <span id="marker1-coords"></span></p>
+    <p>Locality: <span id="marker1-locality"></span></p>
+
+    <p>Marker 2: <span id="marker2-coords"></span></p>
+    <p>Locality: <span id="marker2-locality"></span></p>
+
+    <p>Marker 3: <span id="marker3-coords"></span></p>
+    <p>Locality: <span id="marker3-locality"></span></p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([37.0902, -95.7129], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    function getRandomInRange(from, to, fixed) {
+        return (Math.random() * (to - from) + from).toFixed(fixed) * 1;
+    }
+
+    const coordinates = [
+        { lat: getRandomInRange(30, 35, 3), lng: getRandomInRange(-90, -100, 3) },
+        { lat: getRandomInRange(30, 35, 3), lng: getRandomInRange(-90, -100, 3) },
+        { lat: getRandomInRange(30, 35, 3), lng: getRandomInRange(-90, -100, 3) }
+    ];
+
+    function setMarker(coordinate, markerIndex) {
+        const marker = L.marker([coordinate.lat, coordinate.lng]).addTo(map);
+        document.getElementById(`marker${markerIndex}-coords`).textContent = `Latitude: ${coordinate.lat}, Longitude: ${coordinate.lng}`;
+
+        fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${coordinate.lat}&longitude=${coordinate.lng}&localityLanguage=en`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById(`marker${markerIndex}-locality`).textContent = data.locality || "Unknown locality";
+            })
+            .catch(error => {
+                console.error('Error fetching locality:', error);
+                document.getElementById(`marker${markerIndex}-locality`).textContent = "Error fetching locality";
+            });
+    }
+
+    coordinates.forEach((coord, index) => {
+        setMarker(coord, index + 1);
+    });
+</script>
+
+</body>
+</html>
